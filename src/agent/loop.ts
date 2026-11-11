@@ -8,11 +8,20 @@ export const MAX_TURNS = 4;
 export const MAX_SEARCHES = 10;
 const MAX_TOKENS = 8000;
 
-export type AgentEvent = { type: "status"; text: string } | { type: "token"; text: string };
+// One real agent action, sent twice: "running" when it starts and "done" when it ends.
+export interface Step {
+  id: string;
+  kind: "memory" | "search" | "read" | "check";
+  label: string;
+  state: "running" | "done";
+  detail?: string;
+}
+
+export type AgentEvent = { type: "step"; step: Step } | { type: "token"; text: string };
 
 // The slice of the SDK we use, so tests can swap in a scripted model.
 export interface ModelClient {
-  stream(params: Anthropic.MessageStreamParams): {
+  stream(params: Anthropic.MessageStreamParams, options?: { signal?: AbortSignal }): {
     on(event: "text", cb: (delta: string) => void): unknown;
     finalMessage(): Promise<Anthropic.Message>;
   };
@@ -25,6 +34,7 @@ export interface AgentInput {
   history?: { role: "user" | "assistant"; content: string }[]; // earlier turns of this chat, text only
   search: SearchProvider;
   emit?: (e: AgentEvent) => void;
+  signal?: AbortSignal; // the user pressed Stop or closed the tab: end the run, no more spending
   model?: ModelClient;
   // Both exist so the evals can run a naive baseline with the same loop.
   system?: string; // replaces the system prompt
@@ -47,16 +57,9 @@ export interface AgentResult {
 const NOTE_BUDGET =
   "You have used your search budget for this question. Answer now with what you have. If anything is unverified because of the limit, say so.";
 
-const statusFor = (input: unknown): string => {
+const stepFor = (input: unknown): Pick<Step, "kind" | "label"> => {
   const i = (input ?? {}) as { query?: string; url?: string };
-  if (i.url) {
-    try {
-      return `Reading: ${new URL(i.url).hostname}`;
-    } catch {
-      return "Reading a page";
-    }
-  }
-  return `Searching: ${i.query ?? ""}`.trim();
+  return i.url ? { kind: "read", label: `Reading: ${i.url}` } : { kind: "search", label: `Searching: ${i.query ?? ""}`.trim() };
 };
 
 // A plain function on purpose: a worker could call it recursively later.
@@ -80,17 +83,21 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   let answer = "";
 
   for (;;) {
+    input.signal?.throwIfAborted();
     turns++;
-    const stream = model.stream({
-      model: process.env.MODEL ?? "claude-sonnet-5-5",
-      max_tokens: MAX_TOKENS,
-      // Tools render before system, so this one breakpoint caches both.
-      system: [{ type: "text", text: input.system ?? SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
-      tools: [webSearchTool as Anthropic.Tool],
-      tool_choice: { type: final ? "none" : "auto" },
-      output_config: { effort: (process.env.EFFORT as "low" | "medium" | "high") ?? "medium" },
-      messages,
-    });
+    const stream = model.stream(
+      {
+        model: process.env.MODEL ?? "claude-sonnet-5-5",
+        max_tokens: MAX_TOKENS,
+        // Tools render before system, so this one breakpoint caches both.
+        system: [{ type: "text", text: input.system ?? SYSTEM_PROMPT, cache_control: { type: "ephemeral" } }],
+        tools: [webSearchTool as Anthropic.Tool],
+        tool_choice: { type: final ? "none" : "auto" },
+        output_config: { effort: (process.env.EFFORT as "low" | "medium" | "high") ?? "medium" },
+        messages,
+      },
+      { signal: input.signal },
+    );
     stream.on("text", (text) => emit({ type: "token", text }));
     const res = await stream.finalMessage();
 
@@ -112,10 +119,19 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
 
     const room = MAX_SEARCHES - toolCalls;
     const run = toolUses.slice(0, room);
-    for (const tu of run) emit({ type: "status", text: statusFor(tu.input) });
     toolCalls += run.length;
     for (const tu of run) calls.push({ turn: turns, input: tu.input });
-    const done = await Promise.all(run.map((tu) => tool.run(tu.input)));
+    // Each call reports "done" the moment it finishes, not when the slowest one does.
+    const done = await Promise.all(
+      run.map(async (tu) => {
+        const step = { id: tu.id, ...stepFor(tu.input) };
+        emit({ type: "step", step: { ...step, state: "running" } });
+        const d = await tool.run(tu.input, input.signal);
+        const n = d.results.length;
+        emit({ type: "step", step: { ...step, state: "done", detail: n ? `${n} result${n === 1 ? "" : "s"}` : "nothing returned" } });
+        return d;
+      }),
+    );
     done.forEach((d) => seen.push(...d.results));
 
     const content: Anthropic.ToolResultBlockParam[] = toolUses.map((tu) => {
@@ -134,7 +150,11 @@ export async function runAgent(input: AgentInput): Promise<AgentResult> {
   }
 
   // Tokens already streamed, so the checks arrive as one last chunk.
+  const checking = input.ground !== false && seen.length > 0;
+  const check = { id: "check", kind: "check", label: "Checking sources" } as const;
+  if (checking) emit({ type: "step", step: { ...check, state: "running" } });
   const { issues, notes } = input.ground === false ? { issues: [], notes: [] } : checkGrounding(answer, seen);
+  if (checking) emit({ type: "step", step: { ...check, state: "done", detail: issues.length ? `${issues.length} figure${issues.length === 1 ? "" : "s"} unverified` : "figures match the sources" } });
   if (issues.length) console.warn("[grounding]", notes.join(" | "));
   const asOf = input.ground === false ? "" : input.asOf;
   const tail = [asOf && toolCalls > 0 ? `As of ${asOf}` : "", ...notes].filter(Boolean).join("\n");

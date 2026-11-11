@@ -41,7 +41,7 @@ const r = await runAgent({
   asOf: nowLine(now, tz),
   search: tavily(process.env.TAVILY_API_KEY),
   emit: (e) => {
-    if (e.type === "status") console.log(`[+${Date.now() - t0}ms] ${e.text}`);
+    if (e.type === "step") console.log(`[+${Date.now() - t0}ms] ${e.step.state === "running" ? "..." : "ok "} ${e.step.label}${e.step.detail ? ` (${e.step.detail})` : ""}`);
     else {
       firstToken ||= Date.now() - t0;
       process.stdout.write(e.text);

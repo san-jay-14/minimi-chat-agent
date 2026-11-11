@@ -85,11 +85,56 @@ describe("runAgent", () => {
     expect(second[1].role).toBe("assistant");
     expect(toolResults.map((t) => t.tool_use_id)).toEqual(["a", "b", "c"]);
 
-    expect(events.filter((e) => e.type === "status").map((e) => (e as { text: string }).text)).toEqual([
-      "Searching: HubSpot pricing",
-      "Searching: Pipedrive pricing",
-      "Reading: zoho.com",
+    const steps = events.flatMap((e) => (e.type === "step" ? [e.step] : []));
+    const running = steps.filter((s) => s.state === "running" && s.kind !== "check");
+    expect(running.map((s) => [s.id, s.kind, s.label])).toEqual([
+      ["a", "search", "Searching: HubSpot pricing"],
+      ["b", "search", "Searching: Pipedrive pricing"],
+      ["c", "read", "Reading: https://zoho.com/pricing"],
     ]);
+    // every step is sent again, with the same id, as done and a detail
+    for (const id of ["a", "b", "c"]) {
+      expect(steps.filter((s) => s.id === id).map((s) => s.state)).toEqual(["running", "done"]);
+      expect(steps.find((s) => s.id === id && s.state === "done")!.detail).toBe("1 result");
+    }
+  });
+
+  it("reports a source check step after a search, and none for plain chat", async () => {
+    const searched = scripted([tools(call("a", { query: "x" })), answer("Pro is $99 [R1].")]);
+    const ev1: AgentEvent[] = [];
+    await runAgent({ ...base, search: provider(), model: searched.model, emit: (e) => ev1.push(e) });
+    const check = ev1.flatMap((e) => (e.type === "step" && e.step.id === "check" ? [e.step] : []));
+    expect(check.map((s) => [s.kind, s.state])).toEqual([["check", "running"], ["check", "done"]]);
+    expect(check[1].detail).toBe("figures match the sources");
+
+    const wrong = scripted([tools(call("a", { query: "x" })), answer("Pro is $42 [R1].")]);
+    const ev2: AgentEvent[] = [];
+    await runAgent({ ...base, search: provider(), model: wrong.model, emit: (e) => ev2.push(e) });
+    expect(ev2.flatMap((e) => (e.type === "step" && e.step.state === "done" && e.step.id === "check" ? [e.step.detail] : []))).toEqual(["1 figure unverified"]);
+
+    const chat = scripted([answer("Hello!")]);
+    const ev3: AgentEvent[] = [];
+    await runAgent({ ...base, search: provider(), model: chat.model, emit: (e) => ev3.push(e) });
+    expect(ev3.some((e) => e.type === "step")).toBe(false);
+  });
+
+  it("ends the run with an abort error when the signal fires, and runs no further searches", async () => {
+    const p = provider();
+    const ac = new AbortController();
+    const { model } = scripted([tools(call("a", { query: "x" })), answer("never reached")]);
+    const abortOnFirstSearch = { ...p, search: async (q: { query: string }) => { ac.abort(); return p.search(q); } };
+    await expect(runAgent({ ...base, search: abortOnFirstSearch, model, signal: ac.signal })).rejects.toThrow();
+    expect(p.calls).toHaveLength(1);
+  });
+
+  it("passes the signal to the model call", async () => {
+    const { model, requests } = scripted([answer("ok")]);
+    const seenOptions: unknown[] = [];
+    const spy: ModelClient = { stream: (params, options) => (seenOptions.push(options), model.stream(params)) };
+    const ac = new AbortController();
+    await runAgent({ ...base, search: provider(), model: spy, signal: ac.signal });
+    expect(requests).toHaveLength(1);
+    expect((seenOptions[0] as { signal: AbortSignal }).signal).toBe(ac.signal);
   });
 
   it("sends the brief and message, the cached system prompt, tools, effort, and no sampling or thinking params", async () => {

@@ -32,12 +32,13 @@ export const webSearchTool = {
 const retryable = (e: unknown) => !(e instanceof SearchError) || e.status === 429 || (e.status ?? 0) >= 500;
 
 // One retry on timeouts, network errors, 429 and 5xx. A 4xx will not get better.
-async function withRetry<T>(ms: number, fn: (s: AbortSignal) => Promise<T>): Promise<T> {
+async function withRetry<T>(ms: number, fn: (s: AbortSignal) => Promise<T>, user?: AbortSignal): Promise<T> {
+  const signal = () => (user ? AbortSignal.any([user, AbortSignal.timeout(ms)]) : AbortSignal.timeout(ms));
   try {
-    return await fn(AbortSignal.timeout(ms));
+    return await fn(signal());
   } catch (e) {
-    if (!retryable(e)) throw e;
-    return await fn(AbortSignal.timeout(ms));
+    if (user?.aborted || !retryable(e)) throw e;
+    return await fn(signal());
   }
 }
 
@@ -65,20 +66,23 @@ export function formatResults(results: Result[], error?: string): string {
 export function createWebSearch(provider: SearchProvider) {
   let next = 1;
   return {
-    async run(input: unknown): Promise<{ results: Result[]; text: string }> {
+    async run(input: unknown, user?: AbortSignal): Promise<{ results: Result[]; text: string }> {
       const parsed = inputSchema.safeParse(input);
       if (!parsed.success) return { results: [], text: formatResults([], parsed.error.issues.map((i) => i.message).join("; ")) };
       const i = parsed.data;
       try {
         const raw = i.url
-          ? [await withRetry(READ_MS, (s) => provider.read(i.url!, s))]
-          : await withRetry(SEARCH_MS, (s) =>
-              provider.search({ query: i.query!, startDate: i.start_date, endDate: i.end_date, maxResults: i.max_results ?? 5 }, s),
+          ? [await withRetry(READ_MS, (s) => provider.read(i.url!, s), user)]
+          : await withRetry(
+              SEARCH_MS,
+              (s) => provider.search({ query: i.query!, startDate: i.start_date, endDate: i.end_date, maxResults: i.max_results ?? 5 }, s),
+              user,
             );
         const results = clean(raw, next, !!i.url);
         next += results.length;
         return { results, text: formatResults(results) };
       } catch (e) {
+        if (user?.aborted) throw e; // the user stopped the run: do not tell the model the search "failed"
         return { results: [], text: formatResults([], e instanceof Error ? e.message : String(e)) };
       }
     },

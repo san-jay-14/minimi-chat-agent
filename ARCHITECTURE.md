@@ -28,7 +28,7 @@ src/
   search/provider.ts   picks the adapter from SEARCH_PROVIDER
   search/tool.ts       web_search tool schema + executor
   search/cassette.ts   record/replay wrapper for evals
-public/index.html      single static chat page, no build step
+public/                the chat UI as plain files, no build step: index.html, style.css, app.js (wiring and states), stream.js (SSE reader), render.js (markdown + sanitizer), timeline.js (activity timeline built from `step` events), sources.js (the list under an answer), scroll.js (follow the stream unless the user scrolls up), dom.js (one tiny helper). `marked` and `dompurify` come from npm and are served locally under `/vendor/*`, never from a CDN
 evals/                 cases, cassettes, runner
 test/                  unit tests
 .env.example  package.json  tsconfig.json  README.md
@@ -51,11 +51,13 @@ test/                  unit tests
 - Memory is keyed by `user_id`, shared across that user's sessions (the test asks "what did I ask on 3 November?"). A different `user_id` must never see it.
 
 Response is SSE with these events:
-- `status`: short text, e.g. "Searching: hubspot pricing" (first one must go out before the first model call)
+- `step`: one real agent action, `{ id, kind: "memory" | "search" | "read" | "check", label, state: "running" | "done", detail? }`. The same `id` is sent again with `state: "done"` when the action finishes. The first one ("Checking memory") must go out before the first model call. Search and read steps use the tool call id and are sent as each call finishes, not when the slowest does. `check` is the grounding check. These are actions the code took, not model reasoning.
 - `token`: answer text delta
-- `sources`: final list `[{id,title,url,published}]`
-- `done`: `{ toolCalls, turns, ms }`
+- `sources`: final list `[{id,title,url,domain,published,read_live_at}]`, only the results the answer cites
+- `done`: `{ ms, searches, turns }` (`searches` counts live reads too)
 - `error`: `{ message }`
+
+Stop: when the client closes the connection, the server aborts the agent run (the signal reaches the model call and any in-flight search), sends nothing more and does not save the turn.
 
 ## Context builder (code only, no LLM, target under 50 ms)
 1. Now: current instant in the request timezone, with weekday.
@@ -97,7 +99,7 @@ If the user refers to earlier history and the brief says `MEMORY MATCHES: none`:
 - One tool: `web_search`. The model may call it several times in one turn (parallel). Execute those calls with `Promise.all`.
 - Caps: max 4 model turns, max 10 search calls total, 8 s per search with one retry. On cap, run a final turn with tools disabled that says "answer with what you have and state the limit".
 - Effort rule in the prompt: plain facts 1 search; comparisons one search per entity in parallel; "what changed since" per entity: read the official pricing/changelog page live, plus one news or changelog search inside the time window. No tool call for chit-chat or arithmetic.
-- Emit `status` events when tool calls start.
+- Emit a `step` event when each tool call starts and again when it finishes.
 - Keep the loop a plain function `runAgent(input)` so it can be called recursively later (workers) without a rewrite. Do not build workers now.
 
 ## web_search tool (single tool)

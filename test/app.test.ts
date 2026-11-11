@@ -52,7 +52,42 @@ describe("GET /", () => {
   it("serves the chat page", async () => {
     const res = await setup().app.request("/");
     expect(res.status).toBe(200);
-    expect(await res.text()).toContain("Minimi chat agent");
+    const html = await res.text();
+    expect(html).toContain("<title>Minimi</title>");
+    expect(html).toContain("What should I check?");
+    expect(html).toContain('href="/style.css"');
+    expect(html).toContain('src="/app.js"');
+  });
+});
+
+describe("static files", () => {
+  it("serves the page's styles and modules with the right types", async () => {
+    const { app } = setup();
+    for (const [path, type] of [["/style.css", "text/css"], ["/app.js", "javascript"], ["/stream.js", "javascript"]]) {
+      const res = await app.request(path);
+      expect(res.status, path).toBe(200);
+      expect(res.headers.get("content-type"), path).toContain(type);
+    }
+  });
+
+  it("serves the two UI libraries locally from node_modules, and nothing else under /vendor", async () => {
+    const { app } = setup();
+    for (const name of ["marked.js", "purify.js"]) {
+      const res = await app.request(`/vendor/${name}`);
+      expect(res.status, name).toBe(200);
+      expect(res.headers.get("content-type"), name).toContain("javascript");
+      expect((await res.text()).length, name).toBeGreaterThan(10_000);
+    }
+    for (const name of ["package.json", "__proto__", "..%2fpackage.json", "marked.esm.js"]) {
+      expect((await app.request(`/vendor/${name}`)).status, name).toBe(404);
+    }
+  });
+
+  it("returns 404 for a file that does not exist and does not escape the public folder", async () => {
+    const { app } = setup();
+    expect((await app.request("/nope.js")).status).toBe(404);
+    expect((await app.request("/../package.json")).status).toBe(404);
+    expect((await app.request("/%2e%2e/package.json")).status).toBe(404);
   });
 });
 
@@ -65,24 +100,63 @@ describe("POST /chat", () => {
     expect(run).not.toHaveBeenCalled();
   });
 
-  it("streams status first, then tokens, sources and done", async () => {
-    const src = { id: "R1", title: "T", url: "https://a.com", published: "2026-11-01", crawled: null, snippet: "s" };
+  it("streams the memory step first, then tokens, sources and done", async () => {
+    const src = { id: "R1", title: "T", url: "https://www.a.com/x", published: "2026-11-01", crawled: null, snippet: "s" };
     const { post } = setup(fakeRun({ sources: [src], toolCalls: 2, turns: 2 }));
     const out = await frames(await post({ message: "hi" }));
-    expect(out.map((f) => f.event)).toEqual(["status", "token", "token", "sources", "done"]);
-    expect(out[1].data.text + out[2].data.text).toBe("Hello there");
-    expect(out[3].data).toEqual([{ id: "R1", title: "T", url: "https://a.com", published: "2026-11-01", read_live_at: null }]);
-    expect(out[4].data).toMatchObject({ toolCalls: 2, turns: 2 });
+    expect(out.map((f) => f.event)).toEqual(["step", "step", "token", "token", "sources", "done"]);
+    expect(out[0].data).toEqual({ id: "memory", kind: "memory", label: "Checking memory", state: "running" });
+    expect(out[1].data).toEqual({ id: "memory", kind: "memory", label: "Checking memory", state: "done", detail: "nothing earlier on this" });
+    expect(out[2].data.text + out[3].data.text).toBe("Hello there");
+    expect(out[4].data).toEqual([{ id: "R1", title: "T", url: "https://www.a.com/x", domain: "a.com", published: "2026-11-01", read_live_at: null }]);
+    expect(out[5].data).toMatchObject({ searches: 2, turns: 2 });
+    expect(typeof out[5].data.ms).toBe("number");
   });
 
-  it("sends the first status within 300 ms even when the agent is slow (E17)", async () => {
+  it("passes the agent's step events through unchanged", async () => {
+    const step = { id: "t1", kind: "search", label: "Searching: x", state: "running" };
+    const run = vi.fn(async (input: AgentInput) => {
+      input.emit?.({ type: "step", step: step as never });
+      return result();
+    });
+    const out = await frames(await setup(run).post({ message: "hi" }));
+    expect(out.filter((f) => f.event === "step").map((f) => f.data.id)).toEqual(["memory", "memory", "t1"]);
+  });
+
+  it("says how many earlier exchanges the memory step found", async () => {
+    const { post } = setup();
+    await frames(await post({ message: "Best Postgres hosting?" }));
+    const out = await frames(await post({ message: "what did I ask about Postgres hosting?" }));
+    expect(out[1].data.detail).toBe("1 earlier exchange found");
+  });
+
+  it("stops the agent and saves nothing when the client goes away (Stop button)", async () => {
+    let signal: AbortSignal | undefined;
+    const run = vi.fn(async (input: AgentInput) => {
+      signal = input.signal;
+      await new Promise((_, reject) => input.signal!.addEventListener("abort", () => reject(new Error("aborted"))));
+      return result();
+    });
+    const { post, memory } = setup(run as never);
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await post({ message: "a slow question" });
+    const reader = res.body!.getReader();
+    await reader.read(); // the memory step arrives, the agent is now running
+    await reader.cancel();
+    await new Promise((r) => setTimeout(r, 50));
+    expect(signal?.aborted).toBe(true);
+    expect(memory.search("anon", "slow question")).toEqual([]);
+    expect(console.error).not.toHaveBeenCalled();
+  });
+
+  it("sends the first step within 300 ms even when the agent is slow (E17)", async () => {
     const { post } = setup(fakeRun({}, 800));
     const t0 = Date.now();
     const res = await post({ message: "hi" });
     const reader = res.body!.getReader();
     const first = new TextDecoder().decode((await reader.read()).value);
     expect(Date.now() - t0).toBeLessThan(300);
-    expect(first).toContain("event: status");
+    expect(first).toContain("event: step");
     await reader.cancel();
   });
 
@@ -142,6 +216,15 @@ describe("POST /chat", () => {
     const out = await frames(await post({ message: "hi" }));
     expect(out.at(-1)).toEqual({ event: "error", data: { message: "model down" } });
     expect(memory.search("anon", "hi")).toEqual([]);
+  });
+
+  it("turns a missing or rejected Anthropic key into an instruction", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    for (const err of [Object.assign(new Error("401 invalid x-api-key"), { status: 401 }), new Error("Could not resolve authentication method. Expected either apiKey or authToken to be set.")]) {
+      const run = vi.fn(async () => { throw err; });
+      const out = await frames(await setup(run as never).post({ message: "hi" }));
+      expect(out.at(-1)).toEqual({ event: "error", data: { message: "ANTHROPIC_API_KEY is missing or invalid. Copy .env.example to .env and fill it in." } });
+    }
   });
 
   it("reports a missing search key as an error event, not a crash", async () => {
