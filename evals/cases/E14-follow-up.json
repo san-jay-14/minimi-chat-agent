@@ -1,0 +1,13 @@
+{
+  "id": "E14-follow-up",
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "before": ["Compare the entry paid plans of Neon, Supabase and Render Postgres. Just the monthly price."],
+  "message": "what about the third one, in INR?",
+  "cassette": "E14-follow-up",
+  "checks": [
+    { "type": "answer_matches", "pattern": "render" },
+    { "type": "answer_matches", "pattern": "INR|₹|rupee" },
+    { "type": "searches", "max": 4 }
+  ]
+}

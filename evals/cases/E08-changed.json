@@ -1,0 +1,22 @@
+{
+  "id": "E08-changed",
+  "synthetic": true,
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "history": [
+    { "role": "user", "at": "2026-11-09T11:00:00+05:30", "content": "We chose AcmeCRM Pro for our 20-person sales team. What does it cost?" },
+    { "role": "assistant", "content": "AcmeCRM Pro is $29 per seat per month, billed annually, so about $580 a month for 20 seats." }
+  ],
+  "message": "Has AcmeCRM changed its Pro pricing or shipped anything big since Monday?",
+  "cassette": "E08-changed",
+  "checks": [
+    { "type": "answer_matches", "pattern": "changed" },
+    { "type": "answer_not_matches", "pattern": "unchanged as checked" },
+    { "type": "answer_matches", "pattern": "\\$29" },
+    { "type": "answer_matches", "pattern": "\\$39" },
+    { "type": "answer_matches", "pattern": "\\[R\\d+\\]" },
+    { "type": "answer_matches", "pattern": "9 Nov|Nov(ember)? 9|2026-11-09|Monday" },
+    { "type": "sources", "min": 1, "dated_min": 1 },
+    { "type": "grounding", "max": 0 }
+  ]
+}

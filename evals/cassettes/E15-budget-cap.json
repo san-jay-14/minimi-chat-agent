@@ -1,0 +1,24 @@
+[
+  {
+    "key": "search *",
+    "result": [
+      {
+        "title": "CRM pricing overview",
+        "url": "https://reviews.example.com/crm-pricing",
+        "published": "2026-10-20",
+        "crawled": null,
+        "text": "Entry plans for the big CRM vendors range from $9 to $25 per user per month, billed annually. Pricing pages change often, so check each vendor directly."
+      }
+    ]
+  },
+  {
+    "key": "read *",
+    "result": {
+      "title": "Pricing",
+      "url": "https://vendor.example.com/pricing",
+      "published": null,
+      "crawled": "2026-11-11T07:20:00.000Z",
+      "text": "Pricing\nStarter: $15 per user per month, billed annually.\nProfessional: $45 per user per month, billed annually."
+    }
+  }
+]

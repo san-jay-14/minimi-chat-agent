@@ -1,0 +1,4 @@
+[
+  { "key": "search *", "result": [] },
+  { "key": "read *", "error": "could not read the page: request blocked (403)" }
+]

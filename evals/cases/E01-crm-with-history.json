@@ -1,0 +1,21 @@
+{
+  "id": "E01-crm-with-history",
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "history": [
+    { "role": "user", "at": "2026-11-09T11:02:00+05:30", "content": "We shortlisted HubSpot, Pipedrive, Zoho CRM, Salesforce and Close for a 20-person sales team. What do they cost?" },
+    { "role": "assistant", "content": "Per seat per month, billed annually: HubSpot Sales Hub Starter $20, Pipedrive Essential $14, Zoho CRM Standard $14, Salesforce Sales Pro $100, Close Startup $9." }
+  ],
+  "message": "On Monday we shortlisted 5 CRM tools for a 20-person sales team. Has any of them changed pricing or shipped something big since?",
+  "cassette": "E01-crm-with-history",
+  "checks": [
+    { "type": "brief_contains", "text": "-> 2026-11-09" },
+    { "type": "brief_contains", "text": "MEMORY MATCHES (1)" },
+    { "type": "calls_cover", "names": ["hubspot", "pipedrive", "zoho", "salesforce", "close"] },
+    { "type": "calls_parallel", "min": 5 },
+    { "type": "verdict_each", "names": ["hubspot", "pipedrive", "zoho", "salesforce", "close"] },
+    { "type": "as_of" },
+    { "type": "checked_line" },
+    { "type": "sources", "min": 3, "dated_min": 1 }
+  ]
+}

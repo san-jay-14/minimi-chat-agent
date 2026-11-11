@@ -1,0 +1,15 @@
+{
+  "id": "E04-asked-on-date-cold",
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "message": "What did I ask you on 3 November? Is your answer still correct today?",
+  "cassette": "_none",
+  "synthetic": true,
+  "checks": [
+    { "type": "brief_contains", "text": "MEMORY MATCHES: none" },
+    { "type": "searches", "max": 2 },
+    { "type": "answer_matches", "pattern": "no record|don't have (a |any )?record|have no (earlier |such )?(record|history)|no earlier|can't see|don't see|not have any record|don't have (the|that|any)" },
+    { "type": "answer_matches", "pattern": "\\?" },
+    { "type": "answer_not_matches", "pattern": "\\$\\d" }
+  ]
+}

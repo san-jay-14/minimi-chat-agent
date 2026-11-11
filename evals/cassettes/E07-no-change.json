@@ -1,0 +1,24 @@
+[
+  {
+    "key": "search *",
+    "result": [
+      {
+        "title": "AcmeCRM closes seed round to hire support staff",
+        "url": "https://news.example.com/acmecrm-seed-round",
+        "published": "2026-08-14",
+        "crawled": null,
+        "text": "AcmeCRM announced a seed round in August to hire support staff. The company said its published pricing is not changing."
+      }
+    ]
+  },
+  {
+    "key": "read *",
+    "result": {
+      "title": "AcmeCRM Pricing",
+      "url": "https://acmecrm.example.com/pricing",
+      "published": null,
+      "crawled": "2026-11-11T07:20:00.000Z",
+      "text": "AcmeCRM Pricing\nStarter: $12 per seat per month, billed annually.\nPro: $29 per seat per month, billed annually.\nEnterprise: contact sales."
+    }
+  }
+]

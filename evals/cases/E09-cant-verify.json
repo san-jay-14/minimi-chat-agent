@@ -1,0 +1,17 @@
+{
+  "id": "E09-cant-verify",
+  "synthetic": true,
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "history": [
+    { "role": "user", "at": "2026-11-09T11:00:00+05:30", "content": "We chose AcmeCRM Pro for our 20-person sales team. What does it cost?" },
+    { "role": "assistant", "content": "AcmeCRM Pro is $29 per seat per month, billed annually, so about $580 a month for 20 seats." }
+  ],
+  "message": "Has AcmeCRM changed its Pro pricing or shipped anything big since Monday?",
+  "cassette": "E09-cant-verify",
+  "checks": [
+    { "type": "answer_matches", "pattern": "couldn't verify|could not verify|unable to verify|can't verify|cannot verify|not able to verify" },
+    { "type": "answer_not_matches", "pattern": "unchanged as checked" },
+    { "type": "answer_matches", "pattern": "no results|nothing|couldn't (read|load|open|find)|could not (read|load|open|find)|unreadable|not available|failed|didn't (return|find)|did not (return|find)|no (news|pages|sources|articles)" }
+  ]
+}

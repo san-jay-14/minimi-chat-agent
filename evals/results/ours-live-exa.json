@@ -1,0 +1,67 @@
+{
+  "variant": "ours",
+  "mode": "live",
+  "provider": "exa",
+  "rows": [
+    {
+      "id": "E01-crm-with-history",
+      "pass": true,
+      "failed": [],
+      "searches": 10,
+      "reads": 5,
+      "turns": 2,
+      "ms": 19696,
+      "cost": 0.0732154,
+      "dated": 1,
+      "answer": "Two of the five have changed since Monday. HubSpot changed how it charges for AI, and Salesforce added a new AI add-on price. I couldn't read HubSpot's pricing page live, so its current seat price is unconfirmed.\n\n- **HubSpot: changed.** On Monday I said Starter was $20. A Nov 11 change log says HubSpot added \"HubSpot Credits\" for AI actions, with 500 included on Starter [R4]. Agent Builder was also added to the plans [R4]. A pilot in EMEA for new customers only replaces separate hubs with one seat plus credits [R6][R8]. A third-party site lists the Starter list price as $20, but it is not a live read [R7].\n- **Pipedrive: unchanged as checked.** The live page shows $14 per seat per month, billed annually, on the entry plan [R3]. That plan is now called Lite, and I don't know when the name changed. Nova meeting intelligence is on every plan [R3].\n- **Zoho CRM: unchanged as checked.** The live page showed no prices. A Nov 10 third-party page lists Standard at $14 per user per month, billed yearly [R14].\n- **Salesforce: changed.** The live page still shows Pro Suite at $100 per user per month, billed annually [R29]. On Nov 10 Salesforce added Agentforce Coworker at a flat $50 per user per month [R19]. It also plans to charge for external AI-agent API and MCP calls against Flex Credits, with the cost not yet specified [R22].\n- **Close: unchanged as checked.** The live page shows Solo at $9, billed annually, but it is limited to 1 user [R1]. For your 20-person team the relevant entry plan is Essentials at $35 [R1]. The only new item I found is a minor one: a tone while outbound calls connect [R24].\n\nChecked: I read the live pricing pages for Pipedrive, Zoho, Salesforce and Close. The HubSpot page failed to load. I ran one news search per vendor from Nov 9. I found no change for Pipedrive, Zoho or Close in what I checked.\n\nAs of 2026-11-11 12:58 (Asia/Kolkata), Wednesday"
+    },
+    {
+      "id": "E03-asked-on-date",
+      "pass": true,
+      "failed": [],
+      "searches": 6,
+      "reads": 3,
+      "turns": 2,
+      "ms": 10772,
+      "cost": 0.043207800000000005,
+      "dated": 1,
+      "answer": "**On 3 November you asked: \"Which managed Postgres host has the cheapest entry paid plan?\" My answer then was partly wrong, and it is still wrong today.** Neon Launch has no $5/month plan, and that was my error. Render Postgres at $6/month is the cheapest entry paid plan of the three.\n\n- **Neon:** I said Launch \"starts at $5/month\". Neon's pricing page now shows Launch as pay-as-you-go with no monthly minimum, at $0.106 per CU-hour plus $0.35 per GB-month of storage [R1]. Verdict: **changed**. I can't tell whether it was ever a flat $5. Neon's own page puts a small database at about $15/month [R1].\n- **Supabase:** I said Pro is $25/month. Pro is still \"from $25/month\" [R7]. Verdict: **unchanged as checked**.\n- **Render:** I said Postgres starts at $6/month. The smallest paid instance is still $6/month, with storage at $0.30/GB [R18]. Verdict: **unchanged as checked**.\n\nEach figure is a monthly price, but they are billed differently. Neon is usage-based, Supabase is a flat plan fee, and Render is a flat price per instance plus storage. The Render $6 instance has only 256 MB of RAM [R18].\n\nChecked: I read the live pricing pages for Neon, Supabase and Render. I also searched news for each, dated from 3 Nov. The Neon news I found was about the Free plan and AI Gateway [R13], not Launch pricing. I found no pricing change at Supabase or Render in what I checked.\n\nAs of 2026-11-11 12:58 (Asia/Kolkata), Wednesday"
+    },
+    {
+      "id": "E05-last-tuesday",
+      "pass": true,
+      "failed": [],
+      "searches": 8,
+      "reads": 4,
+      "turns": 2,
+      "ms": 12668,
+      "cost": 0.056523800000000006,
+      "dated": 1,
+      "answer": "Of the four, only Neon looks different, and I can't confirm AWS at all. I used Tuesday 3 Nov, the date of your earlier question, not 10 Nov.\n\n- **Neon:** My earlier answer (3 Nov) said Launch starts at $5/month. The live pricing page now shows no fixed fee. Launch is pay-as-you-go at $0.106 per CU-hour plus $0.35 per GB-month of storage. It lists a typical small database at about $15/month. The page was last updated 2026-11-04 [R18]. Verdict: **changed**. I can't tell whether Neon changed its pricing or my $5 figure was wrong. Neon's 10 Nov update only raised free storage to 1 GB per project [R2].\n- **Supabase Pro:** I said $25/month. The page still shows Pro from $25/month, with $10/month of compute credit covering one Micro instance [R1]. Verdict: **unchanged as checked**.\n- **Render Postgres:** I said from $6/month. The page still lists $6/month for the 256 MB instance, with storage at $0.30/GB [R17]. Verdict: **unchanged as checked**.\n- **AWS RDS db.t4g.micro:** I said about $12/month. The live page I read doesn't show instance rates, and the news search found no pricing change [R19]. Verdict: **couldn't verify**.\n\nChecked: I read the Neon, Supabase, Render and AWS RDS PostgreSQL pricing pages live. I also ran one news search per provider, dated from 2026-11-03. I found no changes to Supabase or Render pricing in what I checked.\n\nAs of 2026-11-11 12:58 (Asia/Kolkata), Wednesday"
+    },
+    {
+      "id": "E10-plain-fact",
+      "pass": true,
+      "failed": [],
+      "searches": 1,
+      "reads": 0,
+      "turns": 2,
+      "ms": 3862,
+      "cost": 0.0047458000000000005,
+      "dated": 0.4,
+      "answer": "Patrick Collison is the CEO of Stripe. He co-founded the company with his brother John, who is the President. [R1][R3]\n\nAs of 2026-11-11 12:58 (Asia/Kolkata), Wednesday"
+    },
+    {
+      "id": "E14-follow-up",
+      "pass": true,
+      "failed": [],
+      "searches": 2,
+      "reads": 1,
+      "turns": 2,
+      "ms": 8427,
+      "cost": 0.0480156,
+      "dated": 0.4,
+      "answer": "Render Postgres' entry paid instance is $6/month, which is about ₹562/month. Render's page lists the price in USD only [R1]. I didn't find any INR pricing from Render.\n\n- **Earlier answer (2026-11-11):** I said the smallest paid instance was $6/month for compute, with storage extra. Render's pricing page, read live now, still shows that (0.1 CPU, 256 MB RAM) at $6/month, plus $0.30/GB for expandable storage [R1]. Verdict: unchanged as checked.\n- **INR conversion:** The rupee closed provisionally at 93.70 per US dollar today [R6]. I calculated ₹562 as $6 × 93.70, and storage as roughly ₹28/GB (0.30 × 93.70). Other sources show rates between 93.66 and 93.76, so the result barely moves [R3][R4].\n\nThis is the mid-market rate. Your card or bank will likely add a markup, and any GST or taxes aren't included. I didn't check whether Render charges Indian customers in USD.\n\nChecked: read render.com/pricing live, and ran one search for the USD/INR rate.\n\nAs of 2026-11-11 12:58 (Asia/Kolkata), Wednesday"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "id": "E13-grounding",
+  "kind": "grounding",
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "message": "price?",
+  "checks": [
+    { "type": "answer_matches", "pattern": "Couldn't verify: \\$42 \\(cited R1\\)" },
+    { "type": "answer_matches", "pattern": "Couldn't verify: \\[R9\\] is not a source from this turn" },
+    { "type": "answer_matches", "pattern": "(Couldn't verify:[^\\n]*\\n?)+$" }
+  ]
+}

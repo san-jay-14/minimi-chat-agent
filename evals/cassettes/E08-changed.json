@@ -1,0 +1,24 @@
+[
+  {
+    "key": "search *",
+    "result": [
+      {
+        "title": "AcmeCRM raises Pro plan price",
+        "url": "https://news.example.com/acmecrm-pro-price-increase",
+        "published": "2026-11-10",
+        "crawled": null,
+        "text": "Effective 10 November 2026, AcmeCRM Pro moves from $29 to $39 per seat per month, billed annually. The company cited new AI features."
+      }
+    ]
+  },
+  {
+    "key": "read *",
+    "result": {
+      "title": "AcmeCRM Pricing",
+      "url": "https://acmecrm.example.com/pricing",
+      "published": null,
+      "crawled": "2026-11-11T07:20:00.000Z",
+      "text": "AcmeCRM Pricing\nStarter: $12 per seat per month, billed annually.\nPro: $39 per seat per month, billed annually.\nEnterprise: contact sales."
+    }
+  }
+]

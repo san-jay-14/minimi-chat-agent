@@ -1,0 +1,13 @@
+{
+  "id": "E15-budget-cap",
+  "synthetic": true,
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "message": "For each of these 12 CRM tools, find the current starting price, verify it on the official pricing page, and check news since Monday: HubSpot, Pipedrive, Zoho, Salesforce, Close, Freshsales, Copper, Insightly, Zendesk Sell, Monday CRM, Nutshell, Capsule.",
+  "cassette": "E15-budget-cap",
+  "checks": [
+    { "type": "searches", "max": 10 },
+    { "type": "capped", "value": true },
+    { "type": "answer_matches", "pattern": "limit|budget|not all|couldn't|could not|only (checked|covered|got)|didn't get|did not get|partial|remaining|rest of" }
+  ]
+}

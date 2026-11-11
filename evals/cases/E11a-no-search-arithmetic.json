@@ -1,0 +1,12 @@
+{
+  "id": "E11a-no-search-arithmetic",
+  "synthetic": true,
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "message": "What is 17 x 23?",
+  "cassette": "_none",
+  "checks": [
+    { "type": "searches", "max": 0 },
+    { "type": "answer_matches", "pattern": "391" }
+  ]
+}

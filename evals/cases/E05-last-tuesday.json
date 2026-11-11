@@ -1,0 +1,18 @@
+{
+  "id": "E05-last-tuesday",
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "history": [
+    { "role": "user", "at": "2026-11-03T10:00:00+05:30", "content": "Best managed Postgres hosting for a small startup? Give me prices." },
+    { "role": "assistant", "content": "Neon Launch starts at $5/month, Supabase Pro is $25/month, Render Postgres starts at $6/month, AWS RDS db.t4g.micro is about $12/month." }
+  ],
+  "message": "Last Tuesday I asked about Postgres hosting. Has any pricing changed?",
+  "cassette": "E05-last-tuesday",
+  "checks": [
+    { "type": "brief_contains", "text": "\"Last Tuesday\" -> 2026-11-03" },
+    { "type": "brief_contains", "text": "MEMORY MATCHES (1)" },
+    { "type": "searches", "min": 1 },
+    { "type": "answer_matches", "pattern": "\\b(changed|unchanged as checked|couldn't verify)\\b" },
+    { "type": "as_of" }
+  ]
+}

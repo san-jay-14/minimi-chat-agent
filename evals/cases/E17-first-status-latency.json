@@ -1,0 +1,8 @@
+{
+  "id": "E17-first-status-latency",
+  "kind": "first-status",
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "message": "hi",
+  "checks": [{ "type": "first_status_ms", "max": 300 }]
+}

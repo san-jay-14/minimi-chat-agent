@@ -1,0 +1,12 @@
+{
+  "id": "E11b-no-search-greeting",
+  "synthetic": true,
+  "client_time": "2026-11-11T12:58:00+05:30",
+  "tz": "Asia/Kolkata",
+  "message": "Hello!",
+  "cassette": "_none",
+  "checks": [
+    { "type": "searches", "max": 0 },
+    { "type": "words", "max": 60 }
+  ]
+}

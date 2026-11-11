@@ -1,0 +1,12 @@
+{
+  "id": "E06-tz-edge",
+  "kind": "brief",
+  "client_time": "2026-11-11T23:30:00-08:00",
+  "tz": "America/Los_Angeles",
+  "message": "What did I ask you yesterday?",
+  "checks": [
+    { "type": "brief_contains", "text": "NOW: 2026-11-11 23:30 (America/Los_Angeles), Wednesday" },
+    { "type": "brief_contains", "text": "\"yesterday\" -> 2026-11-10" },
+    { "type": "brief_not_contains", "text": "-> 2026-11-11" }
+  ]
+}
